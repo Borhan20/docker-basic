@@ -1,0 +1,94 @@
+------ VOLUME ---------
+
+docker volume ls
+docker volume create vol1
+docker volume rm vol1
+
+// without volume
+docker run --name postgres-sabah -e POSTGRES_PASSWORD=12345678 -p 5433:5432 -d postgres
+
+// with volume 
+docker run --name postgres-sabah -e POSTGRES_PASSWORD=12345678 -v vol1:/var/lib/postgresql/data -p 5433:5432 -d postgres 
+
+
+
+
+------ Dockerfile build ---------
+
+docker build -t python-app:v1 . 
+
+
+
+
+------ NETWORK ---------
+
+// default bridge
+ip address show
+docker network ls
+docker inspect bridge
+bridge link
+
+docker run -d --name nginx10 -p 8999:80 nginx
+docker inspect nginx10
+
+docker run -d --name nginx11 -p 8998:80 nginx
+docker inspect nginx11
+docker exec -it nginx11 sh
+apt-get update && apt-get install -y iputils-ping
+ping 172.17.0.2
+ping nginx10
+ping google.com
+exit
+
+// user defined bridge
+docker network create netA
+docker inspect netA
+
+
+docker run -d --network netA --name nginx1 -p 9999:80 nginx
+docker inspect nginx1
+
+docker run -d --network netA --name nginx2 -p 9998:80 nginx
+docker inspect nginx2
+docker exec -it nginx2 sh
+ping nginx1
+ping 172.19.0.2
+exit
+
+
+// connect a host to another network
+
+docker network connect netA nginx10
+docker inspect nginx10
+docker exec -it nginx2 sh
+ping nginx10
+ping 172.19.0.4
+ping 172.17.0.2   // no ping
+exit
+docker network disconnect netA nginx10
+docker inspect nginx10
+
+
+// host network
+docker run -d --network host --name nginx3 nginx
+docker inspect host
+docker inspect nginx3
+route -n
+
+// go to your ip address from browser
+
+https://app.diagrams.net/#G1XyG56zT2hxbxUx_Ifq0cujCU8PRf5vp7#%7B%22pageId%22%3A%22UcacUE1LQGVclGQ7doT5%22%7D
+
+
+
+bridge
+172.17.0.1---- docker0
+172.17.0.2  nginx10
+172.17.0.3  nginx11
+
+
+netA
+172.19.0.1---- custom bridge
+172.19.0.2 nginx1
+172.19.0.3 nginx2
+172.19.0.4 nginx10
